@@ -1,3 +1,4 @@
 data/
 results/
 virtualenv/
+setup.py
