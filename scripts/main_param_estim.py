@@ -11,40 +11,41 @@ from src.parameter_estimation.GLUE import GLUE_all_params, plot_likelihood_vs_pa
 file_name_batch_curves='data/settling_tests/Batch_settleability_test_settlingcurves.xlsx'
 all_sheetnames=pd.ExcelFile(file_name_batch_curves).sheet_names
 
-for sheet_name in all_sheetnames:
-   # extract, plot the sludge blanket heights and save the plots
-   extracted_data=extract_SBH_columns(file_name=file_name_batch_curves, 
-                                      sheet_name=sheet_name)
-   plot_SBH(df=extracted_data, 
-            sheetname=sheet_name, 
-            path='results/parameter_estimation_results/settling_curves',
-            overwrite=False)
+# for sheet_name in all_sheetnames:
+#    # extract, plot the sludge blanket heights and save the plots
+#    extracted_data=extract_SBH_columns(file_name=file_name_batch_curves, 
+#                                       sheet_name=sheet_name)
+#    plot_SBH(df=extracted_data, 
+#             sheetname=sheet_name, 
+#             path='results/parameter_estimation_results/settling_curves',
+#             overwrite=True)
 
-   # calculate the velocities and yfits, plot the sludge blanket heights with yfits and save the plots
-   velocities, yfits=get_velocities_and_yfits(dataframe=extracted_data)
-   plot_SBH_with_yfit(df=extracted_data, 
-                      sheetname=sheet_name, 
-                      yfit=yfits,
-                      path='results/parameter_estimation_results/settling_curves_w_velocity',
-                      overwrite=False)   
+#    # calculate the velocities and yfits, plot the sludge blanket heights with yfits and save the plots
+#    velocities, yfits=get_velocities_and_yfits(dataframe=extracted_data)
+#    plot_SBH_with_yfit(df=extracted_data, 
+#                       sheetname=sheet_name, 
+#                       yfit=yfits,
+#                       path='results/parameter_estimation_results/settling_curves_w_velocity',
+#                       overwrite=True)   
    
 # Define x-data at which the fitted functions will be calculated to make a plot
 x_plot = np.arange(0, 10, 0.01)
 conf_intervals=[]
 
-###define parameters for parameter estimation:
+###define parameters for parameter estimation
 func=takacs_rP_cte #define function
 folder_name='takacs' #define folder to save results (in results/parameter_estimation_results/..)
 all_estimated_parameters = pd.DataFrame(columns=['V0', 'rH']) # define the name of the params
 init_parameters=[19.75, 0.576] # define initial paramaters (m/h, l/g)
 optim_method='L-BFGS-B'
 param_estim_min_func=SSE
+
 ###define parameters for GLUE
-threshold_HS=6
+threshold_high_conc=6
 threshold_behavioural=0.80
 conf_interval_size=0.95
 lower_threshold=[0,0]
-higher_threshold=[120,50]
+higher_threshold=[100,50]
 number_of_repetitions= 100000 #best take 100 000 for good uncertainty intervals
 
 for i, sheet_name in enumerate(all_sheetnames):
@@ -57,7 +58,7 @@ for i, sheet_name in enumerate(all_sheetnames):
    likelihood_values, parameter_sets=GLUE_all_params(fun=func, 
                                                      TSS=TSS, 
                                                      Vhs=velocities, 
-                                                     threshold_HS=threshold_HS, 
+                                                     threshold_HS=threshold_high_conc, 
                                                      T_low=lower_threshold, 
                                                      T_high=higher_threshold, 
                                                      n=number_of_repetitions)
@@ -85,6 +86,7 @@ for i, sheet_name in enumerate(all_sheetnames):
                              vhs=velocities, 
                              thetas_init=init_parameters, 
                              minim_fun=param_estim_min_func,
+                             bounds=[(0, 150), (0, 100)] ,
                              method=optim_method) 
    
    all_estimated_parameters.loc[i]=estimated_parameters 
@@ -108,7 +110,7 @@ for i, column in enumerate(all_estimated_parameters):
                                    conf_intervals=[interval[i,:] for interval in conf_intervals], 
                                    parameter_name=column,
                                    file_path=f'results/parameter_estimation_results/{folder_name}/parameter_timeseries_{column}')
-   
+
 
 ### save final parameters + conf intervals in excel file
 # conf_intervals_numpy=np.array(conf_intervals)

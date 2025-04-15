@@ -35,7 +35,7 @@ def MLE_Norm(fun, thetas, xdata, observed):
    neg_LL = -1*LL
    return neg_LL
 
-def get_parameters(model_func, TSS, vhs, thetas_init, minim_fun, method='L-BFGS-B'):
+def get_parameters(model_func, TSS, vhs, thetas_init, minim_fun, bounds=None, method='L-BFGS-B'):
     """
     Function that estimates parameters for a given model.
     
@@ -50,7 +50,8 @@ def get_parameters(model_func, TSS, vhs, thetas_init, minim_fun, method='L-BFGS-
     Optimized model parameters.
     """
     # Define bounds 
-    bounds = [(0, None) for _ in thetas_init]  # This ensures all parameters are >= 0
+    if bounds is None:
+        bounds = [(0, None) for _ in thetas_init]  # This ensures all parameters are >= 0 if no bound are defined by user
 
     # Minimization to find optimal parameters (thetas)
     result = minimize(lambda thetas: minim_fun(model_func, thetas, TSS, vhs), thetas_init, method=method, bounds=bounds)
